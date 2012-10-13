@@ -1,0 +1,4 @@
+casa(X):-perro(X).
+
+casa(juan).
+perro(juan).
