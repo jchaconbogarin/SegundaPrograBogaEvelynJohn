@@ -29,6 +29,7 @@ class ManejoProlog:
         except:
             
             archivo = open("Recetas.pl", "w")                           #Creación de uno nuevo.
+            archivo.write("receta(pizza, giovanni, italiana, queso, poner_cosas).\nelementoLista(X, [X|R]).\nelementoLista(X, [Y|R]) :- elementoLista(X,R).")
             archivo.close()
             self.direccion = "Recetas.pl"                               #Se define el atributo con la dirección del código de prolog.
             self.cargarConocimientos()                                  #Se cargan los conocimientos del código.
@@ -248,6 +249,21 @@ class VentanaMantenimiento:
         ingredientes = self.entry_ingredientes.get().lower().strip().replace(" ", "_")
         pasos = self.entry_pasos.get().lower().strip().replace(" ", "_")
 
+        ingredientes = ingredientes.split(",")
+        pasos = pasos.split(",")
+        contador = 0
+        for i in ingredientes:
+            ingredientes[contador] = i.lstrip("_0123456789")
+            contador+=1
+        contador = 0
+        for i in pasos:
+            pasos[contador] = i.lstrip("_0123456789")
+            contador+=1
+        pasos = str(pasos).replace('\'', '')
+        ingredientes = str(ingredientes).replace('\'', '')
+        print ingredientes
+        print pasos
+
         #Modo 1 => Inserción de nueva receta.
         if(modo==1):
             
@@ -389,47 +405,74 @@ class VentanaConsulta:
         self.label_query = Label(self.consulta, text = "Consulta de datos", bg = "white", fg = "black", font = ("Helvetica", 10))
         self.label_query.place(x = 75, y = 40)
 
-        self.label_ingrediente = Label(self.consulta, text = "Ingrediente", bg = "white", fg = "black", font = ("Helvetica", 10))
-        self.label_ingrediente.place(x = 30, y = 90)
+        self.varNombre = BooleanVar()
+        self.check_Nombre = Checkbutton(self.consulta, text = "Nombre", onvalue=True, offvalue = False, bg = "White", variable = self.varNombre)
+        self.check_Nombre.place(x=35, y=90)
 
-        ingredientes=['Aguacate', 'Culantro', 'Arroz', 'Espinaca']                 
-        sv = StringVar()
-        self.ingrediente = ttk.Combobox(self.consulta, width = 15, height = 6,textvariable = sv)
-        self.ingrediente.place(x = 30, y = 115, height=20, width=115)
-        self.ingrediente['values']=(ingredientes) 
+        self.entry_Nombre = Entry(self.consulta, width = 25)
+        self.entry_Nombre.place(x=140, y=90)
 
-        self.receta = Label(self.consulta, text = "Nombre de la receta", bg = "white", fg = "black", font = ("Helvetica", 10))
-        self.receta.place(x = 30, y = 155)
+        self.varAutor = BooleanVar()
+        self.check_Autor = Checkbutton(self.consulta, text = "Autor", onvalue=True, offvalue = False, bg = "White", variable = self.varAutor)
+        self.check_Autor.place(x=35, y=120)
 
-        recetas=['Sopa Azteca', 'Arroz blanco', 'Sopa de mariscos', 'Lasagna']                 
-        sv = StringVar()
-        self.receta = ttk.Combobox(self.consulta, width = 15, height = 6,textvariable = sv)
-        self.receta.place(x = 30, y = 180, height=20, width=115)
-        self.receta['values']=(recetas) 
+        self.entry_Autor = Entry(self.consulta, width = 25)
+        self.entry_Autor.place(x=140, y=120)
 
-        self.cocinero = Label(self.consulta, text = "Autor de la receta", bg = "white", fg = "black", font = ("Helvetica", 10))
-        self.cocinero.place(x = 200, y = 155)
-        
-        cocineros=['Chef Geovanny', 'Chef Luisa', 'Chef Alexander', 'Tia Florita']                 
-        sv = StringVar()
-        self.cocinero = ttk.Combobox(self.consulta, width = 15, height = 6,textvariable = sv)
-        self.cocinero.place(x = 200, y = 180, height=20, width=115)
-        self.cocinero['values']=(cocineros) 
-        
-        self.estilo = Label(self.consulta, text = "Estilo de la comida", bg = "white", fg = "black", font = ("Helvetica", 10))
-        self.estilo.place(x = 200, y = 90)
+        self.varEstilo = BooleanVar()
+        self.check_Estilo = Checkbutton(self.consulta, text = "Estilo", onvalue=True, offvalue = False, bg = "White", variable = self.varEstilo)
+        self.check_Estilo.place(x=35, y=150)
 
-        estilos=['Mexicana', 'Francesa', 'Americana', 'Light']                 
-        sv = StringVar()
-        self.estilo = ttk.Combobox(self.consulta, width = 15, height = 6,textvariable = sv)
-        self.estilo.place(x = 200, y = 115, height=20, width=115)
-        self.estilo['values']=(estilos) 
+        self.entry_Estilo = Entry(self.consulta, width = 25)
+        self.entry_Estilo.place(x=140, y=150)
 
-        self.consultar = Button(self.consulta, bg = "gray", fg = "black", text = "Consultar", height = 1, width = 10, relief = RAISED)
+        self.varIngredientes = BooleanVar()
+        self.check_Ingredientes = Checkbutton(self.consulta, text = "Ingredientes", onvalue=True, offvalue = False, bg = "White", variable = self.varIngredientes)
+        self.check_Ingredientes.place(x=35, y=180)
+
+        self.entry_Ingredientes = Entry(self.consulta, width = 25)
+        self.entry_Ingredientes.place(x=140, y=180)
+
+        self.varPasos = BooleanVar()
+        self.check_Pasos = Checkbutton(self.consulta, text = "Pasos", onvalue=True, offvalue = False, bg = "White", variable = self.varPasos)
+        self.check_Pasos.place(x=35, y=210)
+
+        self.entry_Pasos = Entry(self.consulta, width = 25)
+        self.entry_Pasos.place(x=140, y=210)
+
+        self.consultar = Button(self.consulta, bg = "gray", fg = "black", text = "Consultar", height = 1, width = 10, relief = RAISED, command = self.consultar)
         self.consultar.place(x = 120, y = 240)
 
-        self.indicacion = Label(self.consulta, text = "*Sirvase ingresar los datos que requiera para la consulta", bg = "white", fg = "black", font = ("Helvetica", 10))
+        self.indicacion = Label(self.consulta, text = "*Sírvase ingresar los datos que requiera para la consulta.", bg = "white", fg = "black", font = ("Helvetica", 10))
         self.indicacion.place(x = 30, y = 310)
+
+    def consultar(self):
+        
+        valores = ['Nombre', 'Autor', 'Estilo', 'Ingredientes', 'Pasos']
+        
+        if (self.varNombre.get()):
+            
+            valores[0] = self.entry_Nombre.get()
+            
+        if (self.varAutor.get()):
+            
+            valores[1] = self.entry_Autor.get()
+            
+        if (self.varEstilo.get()):
+            
+            valores[2] = self.entry_Estilo.get()
+            
+        if (self.varIngredientes.get()):
+            
+            valores[3] = self.entry_Ingredientes.get()
+            
+        if (self.varPasos.get()):
+            
+            valores[4] = self.entry_Pasos.get()
+
+        print list(pr.prolog.query('receta({},{},{},{},{}).'.format(valores[0],valores[1],valores[2],valores[3],valores[4])))
+
+        
 
 
 #Clase de interfaz.
@@ -444,7 +487,7 @@ class VentanaPrincipal:
         self.fondo()
         self.labelsBotones()
         if(errorInicio):
-            box.showinfo("Error","El código de prolog que se intentó abrir no existe.\n Se creó uno bajo el nombre de Recetas.pl")
+            box.showinfo("Error","El código de prolog que se intentó abrir no existe.\n Se creó uno bajo el nombre de \"Recetas.pl\".")
         self.ventana_principal.mainloop()
 
 
@@ -536,7 +579,7 @@ class VentanaPrincipal:
             box.showerror("Error", "Debe seleccionar un modo de acceso.")   #Mensaje de error si no escogió ningún modo.
 
 
-pr = ManejoProlog("Prasdaueba.pl")   #Se crea la instancia del manejo de prolog con la dirección del archivo.
+pr = ManejoProlog("Recetas.pl")   #Se crea la instancia del manejo de prolog con la dirección del archivo.
 VentanaPrincipal(pr.error)               #Se crea la instancia de la interfaz.
 
 
