@@ -1,4 +1,9 @@
-casa(X):-perro(X).
+receta(pizza, juan, italiana, queso_jamon, poner_cosas_cocinar).
+receta(sushi, tami, japonesa, arroz_anguila, poner_cosas_enrollar).
 
-casa(juan).
-perro(juan).
+receta(asd_,asda_,asdaf_,w2,asda_).
+receta(bogaragnas,asda,asd,asd,___asa___).
+
+
+
+receta(boga,wen,dy,fuen,jeje)receta(hola1,maria,teresa,salas,algo)
