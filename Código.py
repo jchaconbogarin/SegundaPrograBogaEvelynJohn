@@ -29,7 +29,7 @@ class ManejoProlog:
         except:
             
             archivo = open("Recetas.pl", "w")                           #Creación de uno nuevo.
-            archivo.write("receta(pizza, giovanni, italiana, queso, poner_cosas).\nelementoLista(X, [X|R]).\nelementoLista(X, [Y|R]) :- elementoLista(X,R).")
+            archivo.write("buscarIngrediente(Nombre,Ingrediente) :- receta(Nombre,Y,Z), recetaIngrediente(Nombre,Ingrediente).\nbuscarPaso(Nombre,Paso) :- receta(Nombre,Y,Z), recetaPaso(Nombre,Paso).\nbuscarReceta(V,W,X,Y,Z) :- receta(V,W,X), buscarIngrediente(V,Y), buscarPaso(V,Z).\nreceta(pizza, boga, italiana).\nrecetaIngrediente(pizza, queso).\nrecetaIngrediente(pizza, jamon).\nrecetaPaso(pizza, poner_cosas).\nrecetaPaso(pizza, calentar).\nrecetaPaso(pizza, partir).\n")
             archivo.close()
             self.direccion = "Recetas.pl"                               #Se define el atributo con la dirección del código de prolog.
             self.cargarConocimientos()                                  #Se cargan los conocimientos del código.
@@ -40,10 +40,19 @@ class ManejoProlog:
     #E: texto con el código de prolog.
     #S: ninguna
     #R: ninguna(método llamado internamente)
-    def nuevaRegla(self, texto):
+    def nuevaRegla(self, datosReceta):
 
+        datos = []
+        datos.append('\nreceta({},{},{}).'.format(datosReceta[0], datosReceta[1], datosReceta[2]))
+        for i in datosReceta[3]:
+            datos.append('\nrecetaIngrediente({},{}).'.format(datosReceta[0],i))
+        for i in datosReceta[4]:
+            datos.append('\nrecetaPaso({},{}).'.format(datosReceta[0],i))
+        print datosReceta
+        print datos
         archivo = open(self.direccion, "a")
-        archivo.write('\n' + texto + '.')
+        for i in datos:
+            archivo.write(i)
         archivo.close()
         self.cargarConocimientos()
         
@@ -68,21 +77,28 @@ class ManejoProlog:
 
         lineas = self.leer()
         contador = 0
-        
+        a= "receta("+receta+","
+        b= "recetaIngrediente("+receta+","
+        c= "recetaPaso("+receta+","
+        final = []
         for i in lineas:                                                #Se recorre el código de prolog en busca de la receta.
-            
-            if (i.startswith("receta("+receta+",")):                    #Se verifica que la receta sea igual a la ingresada.
+
+            print i + '=' + a 
+            print i + '=' + b
+            print i + '=' + c
+            if (i.startswith("receta("+receta+",") or i.startswith("recetaIngrediente("+receta+",") or i.startswith("recetaPaso("+receta+",")):                    #Se verifica que la receta sea igual a la ingresada.
                 
-                lineas.pop(contador)                                    #Se elimina de la lista
+                #lineas.pop(contador)                                    #Se elimina de la lista
                 contador += 1
                 
             else:
-                
+
+                final.append(i)
                 contador += 1
                 
         archivo = open(self.direccion, "w")                             #Se reescribe el archivo con la receta eliminada.
         
-        for i in lineas:
+        for i in final:
             
             archivo.write(i)
             
@@ -103,14 +119,70 @@ class ManejoProlog:
 
         lineas = self.leer()
         contador = 0
+        iterador1 = 0
+        iterador2 = 0
         
         for i in lineas:                                                #Se recorre el código de prolog en busca de la receta a actualizar
-            
+
             if (i.startswith("receta("+datos[0]+",")):                  #Se verifica que la receta sea igual a la que se desee cambiar
-                
-                lineas[contador] = self.actualizarReceta_aux(posiciones, datos, i[7:])  #Se sustituye la línea con el resultado de la función auxiliar.
+
+                lineas[contador] = self.actualizarReceta_aux(posiciones, datos, i[7:-3])  #Se sustituye la línea con el resultado de la función auxiliar.
                 contador += 1
+
+            elif (i.startswith("recetaIngrediente("+datos[0]+",") and (3 in posiciones)):
+
+                lineas[contador] = self.actualizarRecetaListas(3, datos, i[18:-3], iterador1)
                 
+##                if (iterador1<len(datos[3]) and not(lineas[contador+1].startswith("recetaIngrediente("+datos[0]+","))):
+##                    
+##                    for i in datos[3][iterador1:]:
+##                        
+##                        lineas.insert(contador, "recetaIngrediente({},{}).\n".format(datos[0], i))                        
+##                        contador += 1
+##                        
+##                elif (iterador1==len(datos[3]) and (lineas[contador+1].startswith("recetaIngrediente("+datos[0]+","))):
+##                    
+##                    while(lineas[contador].startswith("recetaPaso("+datos[0]+",")):
+##                        
+##                        lineas.pop[contador]
+##                        
+##                else:
+##                    
+                contador += 1
+                iterador1 += 1
+
+
+            elif (i.startswith("recetaPaso("+datos[0]+",") and (4 in posiciones)):
+
+                lineas[contador] = self.actualizarRecetaListas(4, datos, i[11:-3], iterador2)
+                contador += 1
+                iterador2 += 1
+##                print lineas[contador]
+##                print "datos: "
+##                print datos
+##                print "iterador2:"
+##                print iterador2
+##                print "len(datos[4]):"
+##                print datos[4]
+##                print lineas[contador+1]
+##                if (iterador2<len(datos[4]) and not(lineas[contador+1].startswith("recetaPaso("+datos[0]+","))):
+##                    
+##                    for i in datos[4][iterador2:]:
+##                        
+##                        lineas.insert(contador, "recetaIngrediente({},{}).\n".format(datos[0], i))
+##                        contador += 1
+##                        
+##                elif(iterador2==len(datos[4]) and (lineas[contador+1].startswith("recetaPaso("+datos[0]+","))):
+##                    
+##                    while(lineas[contador].startswith("recetaPaso("+datos[0]+",")):
+##                        
+##                        lineas.pop(contador)
+##                        
+##                else:
+##                    
+##                    contador += 1
+##                    iterador2 += 1
+##                
             else:
                 
                 contador += 1
@@ -123,7 +195,7 @@ class ManejoProlog:
             
         archivo.close()
         self.cargarConocimientos()
-        box.showinfo("Éxito", "La receta se ha borrado con éxito.")
+        box.showinfo("Éxito", "La receta se ha actualizado con éxito.")
 
 
     #Función auxiliar que se encarga de actualizar los datos.
@@ -137,12 +209,27 @@ class ManejoProlog:
     def actualizarReceta_aux(self, posiciones, datos, original):
 
         separacion = original.split(",")                                #Se hace una lista con los datos viejos. Continuando el ejemplo anterior:
-                                                                                #Se obtiene separacion =  ['pizza', 'giovanni', 'italiana', 'queso', 'calentar']  (DATOS ORIGINALES)                                      
+                                                                                #Se obtiene separacion =  ['pizza', 'giovanni', 'italiana', 'queso', 'calentar']  (DATOS ORIGINALES)
+        print "separacion:"+str(separacion)
+        print "datos:"+str(datos)
         for i in posiciones:                                            #Se recorre la lista con las posiciones de la lista separacion por cambiar.
-            separacion[i] = datos[i]                                    #Se cambia la posición obtenida en la lista posiciones, con la misma posición de la lista datos.
+            print "i: "+str(i)
+            if i<3:
+                separacion[i] = datos[i]                                    #Se cambia la posición obtenida en la lista posiciones, con la misma posición de la lista datos.
                                                                                 #Se cambiaría la posición separacion[1] = datos[1] ('giussepe') y luego separacion[3] = datos[3] ('jamon')
-        return "receta({},{},{},{},{}).\n".format(separacion[0], separacion[1], separacion[2], separacion[3], separacion[4])
-                                                                        #Se retorna la nueva línea de código prolog.
+        return "receta({},{},{}).\n".format(separacion[0], separacion[1], separacion[2])
+
+    def actualizarRecetaListas(self, pos, datos, original, iterador):
+
+        separacion = original.split(",")
+        print "separacion: "+str(separacion)
+        print " iterador: "+str(iterador) 
+        separacion[1] = datos[pos][iterador]
+
+        if pos == 3:
+            return "recetaIngrediente({},{}).\n".format(separacion[0], separacion[1])  #Se retorna la nueva línea de código prolog.
+        else:
+            return "recetaPaso({},{}).\n".format(separacion[0], separacion[1])
 
     #Función que se encarga de cargar los conocimientos.
     #E: ninguna.
@@ -243,11 +330,11 @@ class VentanaMantenimiento:
         #Se le quitan los espacios al inicio y al final (.strip() -Prolog presenta error al involucrarlos-)
         #Se le reemplazan los espacios por "_" (.replace() -Prolog rechaza los espacios-)
         
-        nombre = self.entry_nombre.get().lower().strip().replace(" ", "_")
-        autor = self.entry_autor.get().lower().strip().replace(" ", "_")
-        estilo = self.entry_estilo.get().lower().strip().replace(" ", "_")
-        ingredientes = self.entry_ingredientes.get().lower().strip().replace(" ", "_")
-        pasos = self.entry_pasos.get().lower().strip().replace(" ", "_")
+        nombre = self.entry_nombre.get().lower().strip(" ,").replace(" ", "_").replace(",", "")
+        autor = self.entry_autor.get().lower().strip(" ,").replace(" ", "_").replace(",", "")
+        estilo = self.entry_estilo.get().lower().strip(" ,").replace(" ", "_").replace(",", "")
+        ingredientes = self.entry_ingredientes.get().lower().strip(" ,").replace(" ", "_")
+        pasos = self.entry_pasos.get().lower().strip(" ,").replace(" ", "_")
 
         ingredientes = ingredientes.split(",")
         pasos = pasos.split(",")
@@ -259,17 +346,13 @@ class VentanaMantenimiento:
         for i in pasos:
             pasos[contador] = i.lstrip("_0123456789")
             contador+=1
-        pasos = str(pasos).replace('\'', '')
-        ingredientes = str(ingredientes).replace('\'', '')
-        print ingredientes
-        print pasos
 
         #Modo 1 => Inserción de nueva receta.
         if(modo==1):
             
-            validacion = self.validaciones(nombre, autor, estilo, ingredientes, pasos)  #Se validan los datos. Función explicada abajo.
+            validacion = self.validaciones(nombre, autor, estilo, ingredientes, pasos)                       #Se validan los datos. Función explicada abajo.
 
-            if (validacion[0]):                                                         #Se obtiene el valor de retorno de validacion
+            if (validacion[0]):                                    #Se obtiene el valor de retorno de validacion
                 
                 box.showerror("Error de datos", validacion[1])                          #Muestra el error con su mensaje.
                 
@@ -286,7 +369,7 @@ class VentanaMantenimiento:
 
                 box.showerror("Error", "Debe ingresar un nombre.")
             
-            elif (list(pr.prolog.query("receta("+nombre+",W,X,Y,Z)")) == []):           #Validación de que la receta exista en la base de conocimientos.
+            elif (list(pr.prolog.query("buscarReceta("+nombre+",W,X,Y,Z)")) == []):           #Validación de que la receta exista en la base de conocimientos.
                 
                 box.showerror("Error", "La receta que está intentando borrar no existe.")
                 
@@ -296,14 +379,14 @@ class VentanaMantenimiento:
 
         #Modo 3 => Actualización de receta
         elif (modo==3):
-
+            
             datosActualizar = []                                                        #Se hace una lista con las posiciones a actualizar.
             
             if(nombre == ""):                                                           #Se valida que el usuario digitó el nombre de una receta.
 
                 box.showerror("Error", "El nombre de la receta es necesario para poder actualizar")
 
-            elif (list(pr.prolog.query("receta("+nombre+",W,X,Y,Z)")) == []):           #Validación de que la receta exista en la base de conocimientos.
+            elif (list(pr.prolog.query("buscarReceta("+nombre+",W,X,Y,Z)")) == []):           #Validación de que la receta exista en la base de conocimientos.
                 
                 box.showerror("Error", "La receta que está intentando borrar no existe.")
 
@@ -316,11 +399,11 @@ class VentanaMantenimiento:
 
                     datosActualizar.append(2)
 
-                if(ingredientes != ""):
+                if(ingredientes != [""]):
 
                     datosActualizar.append(3)
 
-                if(pasos != ""):
+                if(pasos != [""]):
 
                     datosActualizar.append(4)
 
@@ -338,14 +421,14 @@ class VentanaMantenimiento:
     #R: Datos no pueden iniciar con número ni con "_" ni estar vacíos.
     def validaciones(self, nombre, autor, estilo, ingredientes, pasos):
 
-        receta = "receta({},{},{},{},{})".format(nombre, autor, estilo, ingredientes, pasos)
+        receta = "buscarReceta({},X,Y,Z,W)".format(nombre)
         
         if(nombre == "" or autor == "" or estilo == "" or ingredientes == "" or pasos == ""):
 
             return [True, "Todos los campos son requeridos."]
 
-        elif(nombre[0].isdigit() or autor[0].isdigit() or estilo[0].isdigit() or ingredientes[0].isdigit() or pasos[0].isdigit()
-            or nombre[0] == "_" or autor[0] == "_" or estilo[0] == "_" or ingredientes[0] == "_" or pasos[0] == "_"):
+        elif(nombre[0].isdigit() or autor[0].isdigit() or estilo[0].isdigit()
+            or nombre[0] == "_" or autor[0] == "_" or estilo[0] == "_"):
 
             return [True, "Los datos no pueden iniciar con números ni el caracter \"_\"."]
 
@@ -355,7 +438,7 @@ class VentanaMantenimiento:
 
         else:
 
-            return [False, receta]
+            return [False, [nombre, autor, estilo, ingredientes, pasos]]
 
         
     #Función que cambia los entrys dependiendo del modo.
@@ -393,7 +476,8 @@ class VentanaConsulta:
 
     def __init__(self, ventana):
 
-        self.consulta = Toplevel(ventana, height = 500, width = 500, bg = "white")
+        self.ventPrincipal = ventana
+        self.consulta = Toplevel(self.ventPrincipal, height = 500, width = 500, bg = "white")
         self.img1 = PhotoImage(file = "rata.gif")
         self.label_imag1 = Label(self.consulta, image = self.img1)
         self.label_imag1.img1 = self.img1
@@ -448,7 +532,7 @@ class VentanaConsulta:
 
     def consultar(self):
         
-        valores = ['Nombre', 'Autor', 'Estilo', 'Ingredientes', 'Pasos']
+        valores = ['Nombre', 'Autor', 'Estilo', 'Ingrediente', 'Paso']
         
         if (self.varNombre.get()):
             
@@ -470,9 +554,66 @@ class VentanaConsulta:
             
             valores[4] = self.entry_Pasos.get()
 
-        print list(pr.prolog.query('receta({},{},{},{},{}).'.format(valores[0],valores[1],valores[2],valores[3],valores[4])))
+        consulta2 = list(pr.prolog.query('buscarReceta({},{},{},{},{})'.format(valores[0],valores[1],valores[2],valores[3],valores[4])))
+
+        final2 = []
+        for i in consulta2:
+            n = i.get("Nombre")
+            if(n==None):
+                consulta3 = list(pr.prolog.query("buscarReceta("+valores[0]+",Autor, Estilo, Ingrediente, Paso)"))
+            else:
+                consulta3 = list(pr.prolog.query("buscarReceta("+n+",Autor, Estilo, Ingrediente, Paso)"))
+            resultado = [[n], self.obtenerTipoDato(consulta3, 'Autor'), self.obtenerTipoDato(consulta3, 'Estilo'), self.obtenerTipoDato(consulta3, 'Ingrediente'), self.obtenerTipoDato(consulta3, 'Paso')]
+            if (not(resultado in final2)):
+                final2.append(resultado)
+        if (final2 == []):
+            box.showerror("Error", "No hay resultados para su búsqueda.")
+        elif(final2[0][0][0] == None):
+            final2[0][0][0] = valores[0]
+            VentanaResultado(self.ventPrincipal, final2)
+        else:            
+            VentanaResultado(self.ventPrincipal, final2)
 
         
+    def obtenerTipoDato(self, consulta, dato):
+        tipoDato = []
+        for i in consulta:
+            d = i.get(dato)
+            if(not(d in tipoDato)):
+                tipoDato.append(d)
+        return tipoDato
+
+class VentanaResultado:
+    def __init__(self, vent, resultado):
+        
+        self.resultado = Toplevel(vent, height = 500, width = 500, bg = "white")
+        frame_respuesta = Frame(self.resultado)
+        texto_respuesta = Text(frame_respuesta, height=20, width=100, bg = "white")
+        scroll_respuesta = Scrollbar(frame_respuesta)
+        texto_respuesta.configure(yscrollcommand=scroll_respuesta.set)
+        scroll_respuesta.configure(command=texto_respuesta.yview)
+        texto_respuesta.pack(side=LEFT)
+        scroll_respuesta.pack(side=RIGHT,fill=Y)
+        frame_respuesta.pack()
+        contadorRespuesta = 0
+        for i in resultado:
+            cont = 0
+            contadorRespuesta+=1
+            for respuestaTemporal in i:
+                if(cont == 0):
+                    texto_respuesta.insert(END, "Resultado número {}:\n".format(str(contadorRespuesta)))
+                    texto_respuesta.insert(END, "Nombre Receta: {}".format(str(respuestaTemporal).replace("[", "").replace("]", "").replace("'", "").replace("_", " ")+"\n"))
+                elif (cont == 1):
+                    texto_respuesta.insert(END, "Nombre Autor: {}".format(str(respuestaTemporal).replace("[", "").replace("]", "").replace("'", "").replace("_", " ")+"\n"))
+                elif (cont == 2):
+                    texto_respuesta.insert(END, "Estilo Receta: {}".format(str(respuestaTemporal).replace("[", "").replace("]", "").replace("'", "").replace("_", " ")+"\n"))
+                elif (cont == 3):
+                    texto_respuesta.insert(END, "Ingredientes Receta: {}".format(str(respuestaTemporal).replace("[", "").replace("]", "").replace("'", "").replace("_", " ")+"\n"))
+                elif (cont == 4):
+                    texto_respuesta.insert(END, "Pasos Receta: {}".format(str(respuestaTemporal).replace("[", "").replace("]", "").replace("'", "").replace("_", " ")+"\n"))
+                    texto_respuesta.insert(END, "--------------------------------\n")
+                cont += 1
+
 
 
 #Clase de interfaz.
